@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mailflow — Email &amp; OTP API</title>
+<meta name="description" content="Send email and verify one-time codes with one HTTPS call. $10 per 10,000 emails.">
+<style>
+:root{--bg:#fbfbfa;--card:#fff;--ink:#1a1a19;--dim:#6b6b68;--line:#e5e4e1;
+--accent:#7c4ddb;--accent-ink:#fff;--ok:#0f9960;--bad:#dc2626;
+--code-bg:#f5f4f2;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#141413;--card:#1d1d1b;--ink:#eeeeec;
+--dim:#9a9a96;--line:#333330;--accent:#a78bfa;--accent-ink:#1a1a19;--code-bg:#121211}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+h1,h2,h3{letter-spacing:-.021em;margin:0}
+.wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+nav.top{border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 88%,transparent);
+backdrop-filter:blur(8px);z-index:10}
+nav.top .wrap{display:flex;align-items:center;gap:22px;height:58px}
+.logo{font-weight:660;font-size:16px;letter-spacing:-.02em}
+.logo b{color:var(--accent)}
+nav.top a.navlink{color:var(--dim);text-decoration:none;font-size:14px;font-weight:520}
+nav.top a.navlink:hover{color:var(--ink)}
+.spacer{margin-left:auto}
+button,input,select{font:inherit}
+.btn{padding:9px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);
+color:var(--ink);cursor:pointer;font-weight:560;text-decoration:none;display:inline-block}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.55;cursor:default}
+.link{background:none;border:0;color:var(--accent);cursor:pointer;padding:0;
+text-decoration:underline;font-weight:520}
+input{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);
+color:var(--ink);width:100%}
+input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+label{display:block;font-size:12.5px;color:var(--dim);font-weight:560;margin-bottom:5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:20px}
+.muted{color:var(--dim);font-size:13px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:15px;
+overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;margin:0}
+code{font-family:var(--mono);font-size:.92em}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:640}
+.on{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.off{background:color-mix(in srgb,var(--dim) 18%,transparent);color:var(--dim)}
+.msg{padding:10px 13px;border-radius:8px;font-size:13.5px;margin-bottom:12px}
+.msg.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
+.msg.good{background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok)}
+[hidden]{display:none!important}
+
+/* ---------- landing ---------- */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:46px;padding:64px 0 54px;align-items:start}
+@media(max-width:860px){.hero{grid-template-columns:1fr;gap:34px;padding:40px 0}}
+.hero h1{font-size:44px;line-height:1.08;margin-bottom:16px}
+@media(max-width:860px){.hero h1{font-size:33px}}
+.hero .sub{font-size:17.5px;color:var(--dim);margin-bottom:24px;max-width:44ch}
+.tabs{display:flex;gap:5px;margin-bottom:9px}
+.tabs button{background:none;border:0;padding:6px 11px;border-radius:7px;color:var(--dim);
+cursor:pointer;font-size:13px;font-weight:570}
+.tabs button[aria-selected=true]{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+section{padding:54px 0;border-top:1px solid var(--line)}
+section h2{font-size:27px;margin-bottom:10px}
+section .lede{color:var(--dim);margin-bottom:30px;max-width:56ch}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px}
+.feat h3{font-size:15.5px;margin-bottom:6px}
+.feat p{margin:0;color:var(--dim);font-size:13.5px;line-height:1.6}
+.priceband{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+.priceband b{font-size:42px;font-weight:670;letter-spacing:-.03em}
+.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:22px}
+.pack b{font-size:22px;font-weight:640;display:block;letter-spacing:-.02em}
+.steps{counter-reset:s;display:grid;gap:14px;margin-top:8px}
+.step{display:flex;gap:14px;align-items:flex-start}
+.step i{counter-increment:s;flex:none;width:25px;height:25px;border-radius:50%;
+background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;
+font-size:12.5px;font-weight:680;font-style:normal}
+.step i::before{content:counter(s)}
+footer{border-top:1px solid var(--line);padding:26px 0;color:var(--dim);font-size:13px}
+
+/* ---------- dashboard ---------- */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px;margin-bottom:26px}
+.stat b{display:block;font-size:29px;font-weight:640;letter-spacing:-.025em;line-height:1.15}
+.stat small{color:var(--dim);font-size:12.5px}
+h2.sec{font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin:32px 0 12px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--dim);font-weight:560;font-size:12px;padding:9px 11px;
+border-bottom:1px solid var(--line)}
+td{padding:10px 11px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+.scroll{overflow-x:auto}
+.keyout{background:color-mix(in srgb,var(--accent) 10%,transparent);border:1px solid var(--accent);
+border-radius:10px;padding:15px;margin-bottom:14px;word-break:break-all}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="wrap">
+    <span class="logo">Mail<b>flow</b></span>
+    <a class="navlink" href="#features" data-land>Product</a>
+    <a class="navlink" href="#otp" data-land>OTP</a>
+    <a class="navlink" href="#pricing" data-land>Pricing</a>
+    <span class="spacer"></span>
+    <span id="navauth"></span>
+  </div>
+</nav>
+
+<!-- ==================== LANDING ==================== -->
+<div id="landing" hidden>
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Email and one-time codes, in one API call.</h1>
+      <p class="sub">Send transactional email, or hand us the whole OTP problem —
+        we generate the code, deliver it, and verify it. No SMTP, no SDK, no expiry
+        logic in your database.</p>
+      <div class="row" style="margin-bottom:26px">
+        <a class="btn primary" href="#signup">Start free — no password</a>
+        <a class="btn" href="#pricing">See pricing</a>
+      </div>
+      <div class="tabs">
+        <button aria-selected="true" onclick="codeTab(0)">Send email</button>
+        <button aria-selected="false" onclick="codeTab(1)">Send a code</button>
+        <button aria-selected="false" onclick="codeTab(2)">Verify a code</button>
+      </div>
+      <pre id="codesample"></pre>
+    </div>
+
+    <!-- inline auth -->
+    <div class="card" id="signup">
+      <div id="authbox"></div>
+    </div>
+  </div>
+</div>
+
+<section id="features"><div class="wrap">
+  <h2>What you get</h2>
+  <p class="lede">Everything transactional email needs, and nothing it doesn't.</p>
+  <div class="features">
+    <div class="card feat"><h3>One endpoint</h3>
+      <p>POST JSON with an API key. No SMTP handshake, no SDK to install, no Lambda layer.</p></div>
+    <div class="card feat"><h3>Managed OTP</h3>
+      <p>We generate, store, expire and verify the code. Your database never holds one.</p></div>
+    <div class="card feat"><h3>Authenticated by default</h3>
+      <p>DKIM-signed and SPF-aligned. Bounced addresses are suppressed automatically.</p></div>
+    <div class="card feat"><h3>Idempotent</h3>
+      <p>Pass a key and a retry after a timeout is acknowledged, not delivered twice.</p></div>
+    <div class="card feat"><h3>Credits, not contracts</h3>
+      <p>Buy what you need. No monthly minimum, no seat pricing, nothing expires.</p></div>
+    <div class="card feat"><h3>Revocable keys</h3>
+      <p>One key per app, hashed at rest. Leaked keys die in five minutes.</p></div>
+  </div>
+</div></section>
+
+<section id="otp"><div class="wrap">
+  <h2>Stop storing OTPs yourself</h2>
+  <p class="lede">Most in-house implementations get at least two of these wrong. All of it
+    is handled for you, on every request.</p>
+  <div class="features" style="margin-bottom:30px">
+    <div class="card feat"><h3>Codes never stored in plaintext</h3>
+      <p>Kept as an HMAC with a server-side secret. A six-digit SHA-256 hash is brute-forced
+         instantly; a keyed MAC is not.</p></div>
+    <div class="card feat"><h3>Single use, five attempts</h3>
+      <p>Consumed on success, dead after five wrong guesses. Compared in constant time.</p></div>
+    <div class="card feat"><h3>Bombing protection</h3>
+      <p>60 seconds between codes, three per recipient per ten minutes. Built in, not your problem.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><i></i><div><b>Your app asks for a code.</b>
+      <span class="muted">POST <code>/v1/otp/send</code> with an email. You get back a request id — never the code.</span></div></div>
+    <div class="step"><i></i><div><b>We email it.</b>
+      <span class="muted">Delivered in about a second, from a domain with real sending reputation.</span></div></div>
+    <div class="step"><i></i><div><b>Your user types it in.</b>
+      <span class="muted">POST <code>/v1/otp/verify</code> with the request id and the code. You get <code>{"valid": true}</code>.</span></div></div>
+  </div>
+</div></section>
+
+<section id="pricing"><div class="wrap">
+  <h2>Pricing</h2>
+  <p class="lede">One rate for everything. Sending an email costs a credit, sending a code
+    costs a credit, verifying is free.</p>
+  <div class="priceband"><b>$10</b><span class="muted">per 10,000 emails — $0.001 each</span></div>
+  <div class="packs" id="packs"></div>
+  <p class="muted" style="margin-top:20px">Credits never expire. New accounts get 200 free to
+    try the API before paying.</p>
+</div></section>
+
+<footer><div class="wrap">Mailflow · built on AWS SES ·
+  <a href="#signup">Get started</a></div></footer>
+</div>
+
+<!-- ==================== DASHBOARD ==================== -->
+<div id="dash" hidden><div class="wrap" style="padding-top:30px;padding-bottom:70px">
+  <div class="dash-grid" id="stats"></div>
+
+  <h2 class="sec">Add credits</h2>
+  <div class="packs" id="dashpacks"></div>
+  <div id="checkoutmsg"></div>
+
+  <h2 class="sec">API keys</h2>
+  <div id="newkey"></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="row">
+      <input id="keyname" placeholder="e.g. production backend" style="flex:1;min-width:190px">
+      <button class="btn primary" onclick="mint()">Create key</button>
+    </div>
+    <p class="muted" style="margin:10px 0 0">Shown once. Store it in a secrets manager, not in git.</p>
+  </div>
+  <div class="card scroll"><table id="keys"></table></div>
+
+  <h2 class="sec">Try it</h2>
+  <div class="card">
+    <div class="row">
+      <input id="tryemail" placeholder="you@example.com" style="flex:1;min-width:190px">
+      <input id="trykey" placeholder="paste an API key" style="flex:1;min-width:190px">
+      <button class="btn" onclick="tryOtp()">Send me a code</button>
+    </div>
+    <div id="tryout" style="margin-top:12px"></div>
+  </div>
+
+  <h2 class="sec">Quickstart</h2>
+  <div class="card"><pre id="quickstart"></pre></div>
+
+  <h2 class="sec">Recent activity</h2>
+  <div class="card scroll"><table id="activity"></table></div>
+
+  <h2 class="sec">Credit history</h2>
+  <div class="card scroll"><table id="ledger"></table></div>
+</div></div>
+
+<script src="config.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const C = window.MF_CONFIG;
+const IDP = `https://cognito-idp.${C.region}.amazonaws.com/`;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = cents => "$" + (cents / 100).toFixed(cents % 100 ? 2 : 0);
+
+/* ============ Cognito, called directly so sign-up stays on the page ============ */
+
+async function idp(action, payload) {
+  const r = await fetch(IDP, {
+    method: "POST",
+    headers: {"content-type": "application/x-amz-json-1.1",
+              "x-amz-target": "AWSCognitoIdentityProviderService." + action},
+    body: JSON.stringify(payload),
+  });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.message || body.__type || "request failed");
+  return body;
+}
+
+const store = {
+  get id() { return localStorage.getItem("mf_id"); },
+  get refresh() { return localStorage.getItem("mf_rt"); },
+  save(res) {
+    localStorage.setItem("mf_id", res.IdToken);
+    if (res.RefreshToken) localStorage.setItem("mf_rt", res.RefreshToken);
+  },
+  clear() { localStorage.removeItem("mf_id"); localStorage.removeItem("mf_rt"); },
+};
+
+// Passwordless: no password anywhere in this file. /v1/auth/start makes sure
+// the user exists, then CUSTOM_AUTH emails a code through our own SES.
+const authStart = email => fetch(C.apiBase + "/v1/auth/start", {
+  method: "POST", headers: {"content-type": "application/json"},
+  body: JSON.stringify({email})}).then(async r => {
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(b.error || "could not start sign-in");
+    return b;
+  });
+
+const beginChallenge = email => idp("InitiateAuth", {
+  ClientId: C.clientId, AuthFlow: "CUSTOM_AUTH",
+  AuthParameters: {USERNAME: email}});
+
+const answerChallenge = (email, code, session) => idp("RespondToAuthChallenge", {
+  ClientId: C.clientId, ChallengeName: "CUSTOM_CHALLENGE", Session: session,
+  ChallengeResponses: {USERNAME: email, ANSWER: code}});
+
+async function refreshSession() {
+  if (!store.refresh) return false;
+  try {
+    const r = await idp("InitiateAuth", {
+      ClientId: C.clientId, AuthFlow: "REFRESH_TOKEN_AUTH",
+      AuthParameters: {REFRESH_TOKEN: store.refresh}});
+    store.save(r.AuthenticationResult);
+    return true;
+  } catch { return false; }
+}
+
+/* ============ console API ============ */
+
+async function api(path, opts = {}, retry = true) {
+  const r = await fetch(C.apiBase + path, {...opts,
+    headers: {"content-type": "application/json",
+              authorization: "Bearer " + store.id, ...(opts.headers || {})}});
+  if (r.status === 401 && retry && await refreshSession()) return api(path, opts, false);
+  if (r.status === 401) { store.clear(); location.reload(); return; }
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+  return body;
+}
+
+/* ============ landing ============ */
+
+const API = (C && C.apiBase) || "https://send.ohteapea.com";
+const SAMPLES = [
+`curl -X POST ${API}/v1/send \\
+  -H "x-api-key: mf_live_..." \\
+  -H "content-type: application/json" \\
+  -d '{
+    "to": ["user@example.com"],
+    "subject": "Welcome aboard",
+    "html": "<p>Glad you are here.</p>"
+  }'
+
+# 202  {"messageId":"0100…","creditsRemaining":9998}`,
+
+`curl -X POST ${API}/v1/otp/send \\
+  -H "x-api-key: mf_live_..." \\
+  -H "content-type: application/json" \\
+  -d '{"email": "user@example.com"}'
+
+# 202  {"requestId":"a3f1…","expiresAt":"…"}
+#
+# We generate and email the code.
+# It is never returned to you, and never stored in your database.`,
+
+`curl -X POST ${API}/v1/otp/verify \\
+  -H "x-api-key: mf_live_..." \\
+  -H "content-type: application/json" \\
+  -d '{"requestId": "a3f1…", "code": "418205"}'
+
+# 200  {"valid": true}
+#
+# Single use. Five attempts. Constant-time compare.`];
+
+function codeTab(i) {
+  document.querySelectorAll(".tabs button").forEach((b, n) =>
+    b.setAttribute("aria-selected", String(n === i)));
+  $("#codesample").textContent = SAMPLES[i];
+}
+
+const PACKS = [
+  {credits: 10000, cents: 1000},
+  {credits: 50000, cents: 4500, save: "10% off"},
+  {credits: 200000, cents: 16000, save: "20% off"},
+];
+
+function renderPacks(el, onclick) {
+  el.innerHTML = PACKS.map((p, i) => `
+    <div class="card pack">
+      <b>${money(p.cents)}</b>
+      <div class="muted" style="margin:3px 0 10px">
+        ${p.credits.toLocaleString()} emails${p.save ? ` · ${p.save}` : ""}</div>
+      ${onclick ? `<button class="btn sm" onclick="${onclick}(${i})">Buy credits</button>` : ""}
+    </div>`).join("");
+}
+
+/* ---- inline auth panel: email -> code. No passwords. ---- */
+
+let authMode = "email", pendingEmail = "", authSession = null;
+
+function renderAuth(msg, kind) {
+  const box = $("#authbox");
+  const note = msg ? `<div class="msg ${kind || "bad"}">${esc(msg)}</div>` : "";
+
+  if (authMode === "code") {
+    box.innerHTML = `${note}
+      <h3 style="font-size:18px;margin-bottom:5px">Check your email</h3>
+      <p class="muted" style="margin:0 0 16px">We sent a 6-digit code to ${esc(pendingEmail)}.
+        It expires in 10 minutes.</p>
+      <label for="a-code">Sign-in code</label>
+      <input id="a-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+             placeholder="123456" style="margin-bottom:12px"
+             onkeydown="if(event.key==='Enter')doCode()">
+      <button class="btn primary" style="width:100%" id="a-go" onclick="doCode()">Continue</button>
+      <p class="muted" style="margin:14px 0 0;text-align:center">
+        <button class="link" onclick="setAuthMode('email')">Use a different email</button></p>`;
+    setTimeout(() => $("#a-code") && $("#a-code").focus(), 30);
+    return;
+  }
+
+  box.innerHTML = `${note}
+    <h3 style="font-size:18px;margin-bottom:5px">Sign in</h3>
+    <p class="muted" style="margin:0 0 16px">No password. We email you a code.
+      New here? This creates your account with 200 free credits.</p>
+    <label for="a-email">Email</label>
+    <input id="a-email" type="email" autocomplete="email" placeholder="you@company.com"
+           style="margin-bottom:12px" onkeydown="if(event.key==='Enter')doStart()">
+    <button class="btn primary" style="width:100%" id="a-go" onclick="doStart()">Email me a code</button>`;
+}
+
+function setAuthMode(m) { authMode = m; authSession = null; renderAuth(); }
+
+const busy = (on, label) => {
+  const b = $("#a-go");
+  if (b) { b.disabled = on; b.textContent = on ? "Sending…" : label; }
+};
+
+async function doStart() {
+  const email = $("#a-email").value.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return renderAuth("That does not look like an email address.");
+  }
+  busy(true);
+  try {
+    await authStart(email);
+    const r = await beginChallenge(email);
+    pendingEmail = email;
+    authSession = r.Session;
+    authMode = "code";
+    renderAuth();
+  } catch (e) {
+    busy(false, "Email me a code");
+    renderAuth(e.message);
+  }
+}
+
+async function doCode() {
+  const code = $("#a-code").value.trim();
+  if (!/^\d{4,8}$/.test(code)) return renderAuth("Enter the code from your email.");
+  busy(true);
+  try {
+    const r = await answerChallenge(pendingEmail, code, authSession);
+    if (r.AuthenticationResult) {
+      store.save(r.AuthenticationResult);
+      return boot();
+    }
+    // Wrong code: Cognito hands back a fresh session to try again with.
+    authSession = r.Session;
+    renderAuth("That code is not right. Try again.");
+  } catch (e) {
+    // Out of attempts - the session is dead, start over.
+    authMode = "email";
+    renderAuth("Too many attempts. Request a new code.");
+  }
+}
+
+function signOut() { store.clear(); location.reload(); }
+
+/* ============ dashboard ============ */
+
+let ME = null;
+
+async function loadDash() {
+  ME = await api("/v1/console/me");
+  $("#navauth").innerHTML =
+    `<span class="muted" style="margin-right:12px">${esc(ME.account.email)}</span>
+     <button class="btn sm" onclick="signOut()">Sign out</button>`;
+
+  const c = ME.credits;
+  $("#stats").innerHTML = `
+    <div class="card stat"><b>${c.toLocaleString()}</b><small>credits remaining</small></div>
+    <div class="card stat"><b>${"$" + (c / 1000).toFixed(2)}</b><small>value at $10 / 10k</small></div>
+    <div class="card stat"><b>${esc(ME.fromAddress)}</b><small>your mail is sent from this address</small></div>`;
+
+  renderPacks($("#dashpacks"), "buy");
+
+  $("#quickstart").textContent =
+`# Send an email
+curl -X POST ${ME.endpoints.send} \\
+  -H "x-api-key: YOUR_KEY" -H "content-type: application/json" \\
+  -d '{"to":["user@example.com"],"subject":"Hello","text":"Hi there"}'
+
+# Send a one-time code — we generate and store it
+curl -X POST ${ME.endpoints.otpSend} \\
+  -H "x-api-key: YOUR_KEY" -H "content-type: application/json" \\
+  -d '{"email":"user@example.com"}'
+# -> {"requestId":"..."}
+
+# Verify it
+curl -X POST ${ME.endpoints.otpVerify} \\
+  -H "x-api-key: YOUR_KEY" -H "content-type: application/json" \\
+  -d '{"requestId":"...","code":"123456"}'
+# -> {"valid":true}`;
+
+  loadKeys(); loadActivity(); loadLedger();
+}
+
+async function buy(i) {
+  const pack = ["p10", "p45", "p160"][i];
+  try {
+    await api("/v1/console/checkout", {method: "POST", body: JSON.stringify({pack})});
+  } catch (e) {
+    $("#checkoutmsg").innerHTML =
+      `<div class="msg bad" style="margin-top:12px">${esc(e.message)} — email
+       <a href="mailto:manoj@ohteapea.com">manoj@ohteapea.com</a> and credits are added manually
+       while payments are being wired up.</div>`;
+  }
+}
+
+async function loadKeys() {
+  const d = await api("/v1/console/keys");
+  $("#keys").innerHTML = `<thead><tr><th>Name</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody>`
+    + (d.keys.length ? d.keys.map(k => `<tr>
+        <td><b>${esc(k.name)}</b></td>
+        <td><span class="pill ${k.enabled ? "on" : "off"}">${k.enabled ? "active" : "revoked"}</span></td>
+        <td class="muted">${esc((k.created_at || "").slice(0, 10))}</td>
+        <td><button class="link" onclick="toggle('${k.key_hash}',${!k.enabled})">
+          ${k.enabled ? "Revoke" : "Re-enable"}</button></td></tr>`).join("")
+      : `<tr><td colspan="4" class="muted">No keys yet — create one above.</td></tr>`) + "</tbody>";
+}
+
+async function mint() {
+  const name = $("#keyname").value.trim();
+  try {
+    const r = await api("/v1/console/keys", {method: "POST", body: JSON.stringify({name})});
+    $("#newkey").innerHTML = `<div class="keyout"><b>${esc(r.name)}</b> — copy it now, it is never shown again.
+      <div style="font-family:var(--mono);font-size:13px;margin-top:8px">${esc(r.key)}</div></div>`;
+    $("#keyname").value = "";
+    $("#trykey").value = r.key;
+    loadKeys();
+  } catch (e) { $("#newkey").innerHTML = `<div class="msg bad">${esc(e.message)}</div>`; }
+}
+
+async function toggle(keyHash, enabled) {
+  if (!enabled && !confirm("Revoke this key? Anything using it stops within 5 minutes.")) return;
+  await api("/v1/console/keys/toggle", {method: "POST", body: JSON.stringify({keyHash, enabled})});
+  loadKeys();
+}
+
+/* live OTP demo against the real API, using the customer's own key */
+let tryRequestId = null;
+
+async function tryOtp() {
+  const email = $("#tryemail").value.trim(), key = $("#trykey").value.trim();
+  if (!email || !key) { $("#tryout").innerHTML = `<div class="msg bad">Email and API key are both required.</div>`; return; }
+  try {
+    const r = await fetch(ME.endpoints.otpSend, {method: "POST",
+      headers: {"content-type": "application/json", "x-api-key": key},
+      body: JSON.stringify({email})});
+    const b = await r.json();
+    if (!r.ok) throw new Error(b.error || `HTTP ${r.status}`);
+    tryRequestId = b.requestId;
+    $("#tryout").innerHTML = `<div class="msg good">Code sent. Request id
+      <code>${esc(b.requestId)}</code></div>
+      <div class="row"><input id="trycode" placeholder="enter the code" style="max-width:190px">
+      <button class="btn" onclick="tryVerify()">Verify</button></div>`;
+    loadDash();
+  } catch (e) { $("#tryout").innerHTML = `<div class="msg bad">${esc(e.message)}</div>`; }
+}
+
+async function tryVerify() {
+  const code = $("#trycode").value.trim(), key = $("#trykey").value.trim();
+  const r = await fetch(ME.endpoints.otpVerify, {method: "POST",
+    headers: {"content-type": "application/json", "x-api-key": key},
+    body: JSON.stringify({requestId: tryRequestId, code})});
+  const b = await r.json();
+  $("#tryout").innerHTML = b.valid
+    ? `<div class="msg good">Verified. That code is now consumed and cannot be reused.</div>`
+    : `<div class="msg bad">${esc(b.error || "Not valid")}${
+        b.attemptsRemaining !== undefined ? ` — ${b.attemptsRemaining} attempts left` : ""}</div>`;
+}
+
+async function loadActivity() {
+  const d = await api("/v1/console/activity?days=3&limit=100");
+  $("#activity").innerHTML = `<thead><tr><th>When (UTC)</th><th>Type</th><th>To</th><th>Subject</th></tr></thead><tbody>`
+    + (d.activity.length ? d.activity.map(a => `<tr>
+        <td class="muted" style="font-family:var(--mono);font-size:12px">${esc((a.ts || "").replace("T", " ").slice(0, 19))}</td>
+        <td>${esc(a.kind || "send")}</td>
+        <td style="font-family:var(--mono);font-size:12px">${esc((a.to || []).join(", "))}</td>
+        <td>${esc(a.subject)}</td></tr>`).join("")
+      : `<tr><td colspan="4" class="muted">Nothing sent yet.</td></tr>`) + "</tbody>";
+}
+
+async function loadLedger() {
+  const d = await api("/v1/console/credits");
+  $("#ledger").innerHTML = `<thead><tr><th>When</th><th>Type</th><th>Credits</th><th>Balance after</th></tr></thead><tbody>`
+    + (d.ledger.length ? d.ledger.map(l => `<tr>
+        <td class="muted" style="font-family:var(--mono);font-size:12px">${esc((l.sk || "").slice(0, 19).replace("T", " "))}</td>
+        <td>${esc(l.kind)}</td>
+        <td>+${Number(l.credits).toLocaleString()}</td>
+        <td>${Number(l.balance_after).toLocaleString()}</td></tr>`).join("")
+      : `<tr><td colspan="4" class="muted">No credit history.</td></tr>`) + "</tbody>";
+}
+
+/* ============ boot ============ */
+
+async function boot() {
+  if (store.id) {
+    $("#landing").hidden = true; $("#dash").hidden = false;
+    document.querySelectorAll("[data-land]").forEach(a => a.hidden = true);
+    try { await loadDash(); return; }
+    catch (e) { console.error(e); store.clear(); }
+  }
+  $("#dash").hidden = true; $("#landing").hidden = false;
+  document.querySelectorAll("[data-land]").forEach(a => a.hidden = false);
+  $("#navauth").innerHTML = `<button class="btn sm" onclick="setAuthMode('email');location.hash='#signup'">Sign in</button>`;
+  codeTab(0);
+  renderPacks($("#packs"));
+  renderAuth();
+}
+boot();
+</script>
+</body>
+</html>

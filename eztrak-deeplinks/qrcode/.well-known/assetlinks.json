@@ -1,0 +1,12 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.liftontechsupreme.eztrak",
+    "sha256_cert_fingerprints": [
+      "50:6C:8D:08:92:B8:4F:5D:D0:F4:25:83:44:0B:34:EE:55:E1:5B:0D:43:FC:35:F0:B7:7A:64:AD:F9:F5:13:CB",
+      "EF:B6:DA:74:0A:E9:20:B5:FC:4D:9D:0E:D5:AE:4E:95:FB:6B:E1:B8:09:42:78:FD:50:E2:3D:4E:43:0D:43:19",
+      "A9:5C:17:56:BC:5B:60:1F:11:AA:F5:27:17:4D:39:27:20:DA:C2:39:7C:E8:D8:DA:17:91:4E:25:2F:A3:AA:D1"
+    ]
+  }
+}]

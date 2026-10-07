@@ -1,0 +1,8 @@
+# These files run on Linux. CRLF line endings break shebangs and heredocs,
+# so normalise everything to LF regardless of the checkout platform.
+* text=auto eol=lf
+*.sh text eol=lf
+*.tf text eol=lf
+*.hcl text eol=lf
+*.yml text eol=lf
+*.md text eol=lf

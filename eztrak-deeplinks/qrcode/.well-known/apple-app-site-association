@@ -1,0 +1,9 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [{
+      "appID": "4L2R6284G6.com.liftontechsupreme.eztrak",
+      "paths": ["/Login-Page/*", "*"]
+    }]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "models": {
+    "script": "gpt-4o",
+    "tts": "gpt-4o-mini-tts",
+    "tts_fallback": "tts-1",
+    "image": "dall-e-3",
+    "transcribe": "whisper-1"
+  },
+  "voice": "onyx",
+  "voice_instructions": "Speak with calm confidence and clear pacing. Land the hook hard, then settle into an even, documentary-style delivery.",
+  "formats": {
+    "short": { "width": 1080, "height": 1920, "fps": 30, "image_size": "1024x1792", "target_seconds": 45, "scene_count": 5 },
+    "long":  { "width": 1920, "height": 1080, "fps": 30, "image_size": "1792x1024", "target_seconds": 480, "scene_count": 14 }
+  },
+  "captions": {
+    "enabled": true,
+    "max_words_per_cue": 4,
+    "font_size_short": 78,
+    "font_size_long": 40,
+    "primary_colour": "&H00FFFFFF",
+    "outline_colour": "&H00000000",
+    "margin_v_short": 420,
+    "margin_v_long": 90
+  },
+  "visual_style": "cinematic 3D render, dramatic rim lighting, deep navy and teal palette, volumetric haze, shallow depth of field, no text, no words, no letters, no logos, no watermarks",
+  "channel": {
+    "name": "CHANGE ME",
+    "audience": "US, UK and Canada",
+    "cta": "Subscribe for more."
+  }
+}

@@ -1,0 +1,27 @@
+# Large non-code material - these belong in object storage, not git.
+call-9961634939/
+videos/
+yt-prompt-studio/
+
+# ohteapea lives in its own repo: github.com/manojgowda0704/ohteapea
+# Its GitHub Actions deploys are pinned to that repository's immutable OIDC
+# subject, so moving it here would stop it deploying itself.
+ohteapea/
+
+# build output and state
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+__pycache__/
+*.pyc
+node_modules/
+*.zip
+
+# never commit real values
+.env
+*.tfvars
+*.pem
+
+# local Claude Code settings, not shared
+.claude/

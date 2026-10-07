@@ -1,0 +1,30 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+.terraform.lock.hcl.bak
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Secrets - never commit these
+*.auto.tfvars
+secrets.tfvars
+*.pem
+*.key
+.env
+
+# Tooling output
+tfsec-results.json
+checkov-report.*
+.tflint.d/
+
+# OS
+.DS_Store
+Thumbs.db

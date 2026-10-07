@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Email API — Admin</title>
+<style>
+:root{--bg:#fbfbfa;--card:#fff;--ink:#1a1a19;--dim:#6b6b68;--line:#e5e4e1;
+--accent:#8a5cf6;--ok:#0f9960;--warn:#d97706;--bad:#dc2626;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#151514;--card:#1e1e1c;--ink:#eeeeec;
+--dim:#9a9a96;--line:#33332f;--accent:#a78bfa}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,sans-serif}
+header{border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{font-size:15px;margin:0;font-weight:650;letter-spacing:-.01em}
+h1 span{color:var(--dim);font-weight:400}
+main{max-width:1080px;margin:0 auto;padding:20px}
+nav{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px;
+font:inherit;font-weight:550;color:var(--dim);cursor:pointer;margin-bottom:-1px}
+nav button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.stat b{display:block;font-size:24px;font-weight:600;letter-spacing:-.02em;margin-bottom:2px}
+.stat small{color:var(--dim);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--dim);font-weight:550;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.wrap{overflow-x:auto}
+code,.mono{font-family:var(--mono);font-size:12px}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.on{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.off{background:color-mix(in srgb,var(--dim) 18%,transparent);color:var(--dim)}
+.err{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+input,select,button.act{font:inherit;padding:8px 10px;border:1px solid var(--line);
+border-radius:7px;background:var(--card);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+button.act{cursor:pointer;font-weight:550}
+button.primary{background:var(--accent);color:#fff;border-color:transparent}
+button.link{background:none;border:0;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weight:550}
+.gate{max-width:400px;margin:80px auto;text-align:center}
+.msg{padding:11px 14px;border-radius:8px;margin-bottom:14px;font-size:13px}
+.msg.good{background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok)}
+.msg.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
+.keyout{background:color-mix(in srgb,var(--accent) 10%,transparent);border:1px solid var(--accent);
+border-radius:8px;padding:14px;margin-bottom:14px;word-break:break-all}
+.muted{color:var(--dim);font-size:12px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <h1 style="font-size:18px;margin-bottom:6px">Email API Admin</h1>
+  <p class="muted" style="margin-bottom:18px">Enter an admin key to continue.</p>
+  <input id="gatekey" type="password" placeholder="ok_admin_…" style="width:100%;margin-bottom:10px">
+  <button class="act primary" style="width:100%" onclick="unlock()">Unlock</button>
+  <p id="gateerr" class="msg bad" hidden></p>
+</div>
+
+<div id="app" hidden>
+<header>
+  <h1>Email API <span>· ohteapea.com</span></h1>
+  <span style="margin-left:auto"><button class="link" onclick="lock()">Lock</button></span>
+</header>
+<main>
+  <nav>
+    <button id="t-health" aria-selected="true" onclick="tab('health')">Health</button>
+    <button id="t-keys" aria-selected="false" onclick="tab('keys')">Keys</button>
+    <button id="t-activity" aria-selected="false" onclick="tab('activity')">Activity</button>
+  </nav>
+
+  <section id="p-health">
+    <div class="grid" id="stats"></div>
+    <div class="card" id="healthnote"></div>
+  </section>
+
+  <section id="p-keys" hidden>
+    <div id="newkey"></div>
+    <div class="card">
+      <div class="row">
+        <div><label for="k-tenant">Tenant</label><input id="k-tenant" placeholder="billing"></div>
+        <div><label for="k-from">Sends as</label><select id="k-from"></select></div>
+        <div style="flex:1;min-width:200px"><label for="k-desc">Description</label>
+          <input id="k-desc" placeholder="invoicing service, acct 1111…" style="width:100%"></div>
+        <button class="act primary" onclick="mint()">Issue key</button>
+      </div>
+    </div>
+    <div class="card wrap"><table id="keys"></table></div>
+  </section>
+
+  <section id="p-activity" hidden>
+    <div class="card wrap"><table id="activity"></table></div>
+  </section>
+</main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let KEY = sessionStorage.getItem("adminKey") || "";
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {
+    ...opts,
+    headers: {"content-type": "application/json", "x-api-key": KEY, ...(opts.headers || {})},
+  });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+  return body;
+}
+
+async function unlock() {
+  KEY = $("#gatekey").value.trim();
+  try {
+    await api("/v1/admin/health");
+    sessionStorage.setItem("adminKey", KEY);
+    $("#gate").hidden = true; $("#app").hidden = false;
+    tab("health");
+  } catch (e) {
+    $("#gateerr").textContent = e.message; $("#gateerr").hidden = false;
+  }
+}
+
+function lock() { sessionStorage.removeItem("adminKey"); location.reload(); }
+
+function tab(name) {
+  for (const t of ["health", "keys", "activity"]) {
+    $("#p-" + t).hidden = t !== name;
+    $("#t-" + t).setAttribute("aria-selected", String(t === name));
+  }
+  ({health: loadHealth, keys: loadKeys, activity: loadActivity})[name]();
+}
+
+const pct = v => (v * 100).toFixed(2) + "%";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+async function loadHealth() {
+  const h = await api("/v1/admin/health");
+  const bounceBad = h.bounceRate >= h.bounceRateLimit * 0.6;
+  const compBad = h.complaintRate >= h.complaintRateLimit * 0.6;
+  $("#stats").innerHTML = `
+    <div class="stat"><b>${h.last24h.send}</b><small>sent · 24h</small></div>
+    <div class="stat"><b>${h.last24h.delivery}</b><small>delivered · 24h</small></div>
+    <div class="stat"><b style="color:${bounceBad ? "var(--bad)" : "inherit"}">${pct(h.bounceRate)}</b>
+      <small>bounce rate · limit ${pct(h.bounceRateLimit)}</small></div>
+    <div class="stat"><b style="color:${compBad ? "var(--bad)" : "inherit"}">${pct(h.complaintRate)}</b>
+      <small>complaint rate · limit ${pct(h.complaintRateLimit)}</small></div>
+    <div class="stat"><b>${h.quota.sentLast24h} / ${h.quota.max24h}</b><small>daily quota used</small></div>
+    <div class="stat"><b>${h.quota.maxSendRate}/s</b><small>max send rate</small></div>`;
+  $("#healthnote").innerHTML = `Sending <span class="pill ${h.sendingEnabled ? "on" : "err"}">
+    ${h.sendingEnabled ? "enabled" : "PAUSED"}</span> ·
+    Production access <span class="pill ${h.productionAccess ? "on" : "err"}">
+    ${h.productionAccess ? "granted" : "sandbox"}</span>
+    <p class="muted" style="margin:10px 0 0">SES pauses the account above ${pct(h.bounceRateLimit)} bounce
+    or ${pct(h.complaintRateLimit)} complaint rate. Rates are 15-minute maximums over the last 24 hours.</p>`;
+}
+
+async function loadKeys() {
+  const d = await api("/v1/admin/keys");
+  $("#k-from").innerHTML = d.allowedSenders.map(a => `<option>${esc(a)}</option>`).join("");
+  $("#keys").innerHTML = `<thead><tr><th>Tenant</th><th>Sends as</th><th>Description</th>
+    <th>Status</th><th>Created</th><th></th></tr></thead><tbody>` +
+    (d.keys.length ? d.keys.map(k => `<tr>
+      <td><b>${esc(k.tenant)}</b>${k.is_admin ? ' <span class="pill on">admin</span>' : ""}</td>
+      <td class="mono">${esc((k.allowed_from || [])[0])}</td>
+      <td>${esc(k.description)}</td>
+      <td><span class="pill ${k.enabled ? "on" : "off"}">${k.enabled ? "active" : "revoked"}</span></td>
+      <td class="muted">${esc((k.created_at || "").slice(0, 10))}</td>
+      <td>${k.is_admin ? "" : `<button class="link" onclick="toggle('${k.key_hash}',${!k.enabled})">
+        ${k.enabled ? "Revoke" : "Re-enable"}</button>`}</td></tr>`).join("")
+      : `<tr><td colspan="6" class="muted">No keys yet.</td></tr>`) + "</tbody>";
+}
+
+async function mint() {
+  const tenant = $("#k-tenant").value.trim();
+  const desc = $("#k-desc").value.trim();
+  try {
+    const r = await api("/v1/admin/keys", {method: "POST", body: JSON.stringify(
+      {tenant, from: $("#k-from").value, description: desc})});
+    $("#newkey").innerHTML = `<div class="keyout"><b>Key for ${esc(r.tenant)}</b> — shown once, copy it now.
+      <div class="mono" style="margin:8px 0;font-size:13px">${esc(r.key)}</div>
+      <span class="muted">Send it directly to the team, never in a group chat. Revoke from the table below.</span></div>`;
+    $("#k-tenant").value = ""; $("#k-desc").value = "";
+    loadKeys();
+  } catch (e) {
+    $("#newkey").innerHTML = `<p class="msg bad">${esc(e.message)}</p>`;
+  }
+}
+
+async function toggle(keyHash, enabled) {
+  if (enabled === false && !confirm("Revoke this key? The team using it stops sending within 5 minutes."))
+    return;
+  await api("/v1/admin/keys/toggle", {method: "POST", body: JSON.stringify({keyHash, enabled})});
+  loadKeys();
+}
+
+async function loadActivity() {
+  const d = await api("/v1/admin/activity?days=3&limit=200");
+  $("#activity").innerHTML = `<thead><tr><th>When (UTC)</th><th>Tenant</th><th>To</th>
+    <th>Subject</th><th>Message ID</th></tr></thead><tbody>` +
+    (d.activity.length ? d.activity.map(a => `<tr>
+      <td class="muted mono">${esc((a.ts || "").replace("T", " ").slice(0, 19))}</td>
+      <td><b>${esc(a.tenant)}</b></td>
+      <td class="mono">${esc((a.to || []).join(", "))}</td>
+      <td>${esc(a.subject)}</td>
+      <td class="mono muted">${esc((a.message_id || "").slice(0, 24))}…</td></tr>`).join("")
+      : `<tr><td colspan="5" class="muted">Nothing sent in the last 3 days.</td></tr>`) + "</tbody>";
+}
+
+if (KEY) { $("#gate").hidden = true; $("#app").hidden = false; tab("health"); }
+</script>
+</body>
+</html>

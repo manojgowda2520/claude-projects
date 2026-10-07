@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seriesforge"
+version = "0.1.0"
+description = "Outline, track and draft an episodic series from the command line."
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+sf = "seriesforge.cli:main"
+seriesforge = "seriesforge.cli:main"
+
+[tool.setuptools]
+packages = ["seriesforge"]
